@@ -1,0 +1,4 @@
+# 데이터/스크립트는 안 올림. index.html만 올리는 게 목적.
+*
+!index.html
+!.gitignore

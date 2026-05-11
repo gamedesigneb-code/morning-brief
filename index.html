@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>모닝 브리핑</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sidebar-w: 240px;
+    --bg: #FAFAF7;
+    --paper: #FFFFFF;
+    --accent: #6B7A8F;
+    --accent-soft: #E8ECEF;
+    --line: #EAE8E3;
+    --line-strong: #D8D5CE;
+    --text: #2D2A26;
+    --text-mid: #6B655D;
+    --text-sub: #A09889;
+    --radius: 10px;
+  }
+  html, body {
+    height: 100%; background: var(--bg); color: var(--text);
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-size: 15px; line-height: 1.65; font-weight: 400;
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ── Layout ── */
+  #app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* ── Sidebar ── */
+  #sidebar {
+    width: var(--sidebar-w); flex-shrink: 0;
+    background: var(--bg); border-right: 1px solid var(--line);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  #sidebar-header {
+    padding: 36px 20px 24px;
+    border-bottom: 1px solid var(--line);
+    text-align: center;
+  }
+  #sidebar-header h1 {
+    font-size: 19px; font-weight: 700; color: var(--text);
+    letter-spacing: -0.4px; line-height: 1.3;
+  }
+  #sidebar-header p {
+    font-size: 12px; color: var(--text-sub); margin-top: 6px;
+    letter-spacing: 0.3px;
+  }
+  #date-list { overflow-y: auto; flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .date-item {
+    padding: 11px 14px; cursor: pointer; border-radius: 8px;
+    transition: background 0.15s, color 0.15s;
+    background: transparent;
+    text-align: center; font-size: 13px; font-weight: 500; color: var(--text-mid);
+    letter-spacing: 0.1px;
+  }
+  .date-item:hover { background: var(--accent-soft); color: var(--text); }
+  .date-item.active {
+    background: var(--accent-soft); color: var(--text); font-weight: 600;
+  }
+
+  /* ── Main ── */
+  #main { flex: 1; overflow-y: auto; background: var(--paper); }
+  #content { max-width: 760px; margin: 0 auto; padding: 56px 40px 80px; }
+
+  .brief-header { margin-bottom: 36px; }
+  .brief-header .bh-eyebrow {
+    font-size: 11px; color: var(--text-sub); margin-bottom: 8px;
+    letter-spacing: 1.5px; text-transform: uppercase; font-weight: 500;
+  }
+  .brief-header h2 {
+    font-size: 30px; font-weight: 700; letter-spacing: -0.7px;
+    color: var(--text); line-height: 1.25;
+  }
+
+  /* ── Category Tabs ── */
+  .cat-tabs {
+    display: flex; gap: 0; margin-bottom: 36px;
+    border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; background: var(--paper); z-index: 10;
+  }
+  .cat-tab {
+    padding: 12px 20px 14px; cursor: pointer; font-size: 14px; font-weight: 500;
+    color: var(--text-sub); border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    background: none; border-top: none; border-left: none; border-right: none;
+    font-family: inherit; letter-spacing: -0.1px;
+    margin-bottom: -1px;
+  }
+  .cat-tab:hover { color: var(--text-mid); }
+  .cat-tab.active { color: var(--text); border-bottom-color: var(--text); font-weight: 600; }
+
+  /* ── Sources (collapsible) ── */
+  .sources-toggle {
+    background: transparent; border: 1px solid var(--line-strong);
+    padding: 8px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 500;
+    color: var(--text-mid); cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+    font-family: inherit; margin-top: 12px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .sources-toggle:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .sources-toggle .arrow { transition: transform 0.2s; font-size: 9px; color: var(--text-sub); }
+  .sources-toggle.open .arrow { transform: rotate(180deg); }
+  .sources-body { display: none; margin-top: 12px; padding-left: 4px; }
+  .sources-body.open { display: block; }
+
+  /* ── Story Card ── */
+  .story { margin-bottom: 40px; }
+  .story-top { margin-bottom: 18px; }
+  .story-headline {
+    font-size: 19px; font-weight: 700; line-height: 1.45;
+    letter-spacing: -0.4px; color: var(--text);
+  }
+
+  .metrics { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+  .metric-chip {
+    background: var(--accent-soft); border: none;
+    border-radius: 6px; padding: 7px 12px;
+    font-size: 12.5px; font-weight: 500; color: var(--text-mid);
+    line-height: 1.4;
+  }
+
+  .summary {
+    font-size: 15px; line-height: 1.8; color: var(--text); margin-bottom: 20px;
+    letter-spacing: -0.1px;
+  }
+
+  /* ── Background ── */
+  .bg-box {
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 22px 24px; margin-bottom: 14px;
+  }
+  .bg-box-title {
+    font-size: 11px; font-weight: 600; color: var(--text-sub);
+    text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 16px;
+  }
+  .bg-section { margin-bottom: 16px; }
+  .bg-section:last-child { margin-bottom: 0; }
+  .bg-section-label {
+    font-size: 12.5px; font-weight: 600; color: var(--text); margin-bottom: 6px;
+    letter-spacing: -0.1px;
+  }
+  .bg-section-text { font-size: 14px; line-height: 1.75; color: var(--text-mid); }
+
+  /* ── Sources ── */
+  .source-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-bottom: 8px; font-size: 13px;
+  }
+  .src-num {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--text-mid);
+    font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .source-item a { color: var(--text-mid); text-decoration: none; line-height: 1.55; }
+  .source-item a:hover { color: var(--text); text-decoration: underline; }
+
+  .story-divider { border: none; border-top: 1px solid var(--line); margin: 36px 0; }
+
+  .empty { color: var(--text-sub); font-size: 14px; padding: 60px 0; text-align: center; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <nav id="sidebar">
+    <div id="sidebar-header">
+      <h1>모닝 브리핑</h1>
+      <p>일별 세계 뉴스 요약</p>
+    </div>
+
+    <div id="date-list"></div>
+  </nav>
+  <main id="main">
+    <div id="content"></div>
+  </main>
+</div>
+
+<script>
+const BRIEFS = [{
+  tag:`2026-05-11`,
+  label:`2026년 5월 11일 (월요일)`,
+  stories:[{
+  category:`경제`,
+  colorFg:`#1a6ef5`,
+  colorBg:`#e8f0fe`,
+  headline:`트럼프, 이란 역제안 전면 거부 — 브렌트유 4% 급등 \$104 돌파, 이번 주 CPI·Fed 의장 인준 주목`,
+  metrics:[`브렌트유 +4% → \$104.01/bbl, WTI +2.7% → \$97.97/bbl (협상 결렬 우려)`,`S&P 500 7,300대 유지, 코스피 4.32% 급등 7,822.24 역대 최고 경신`],
+  summary:`이란이 미국의 종전 제안에 '호르무즈 해협 주권 인정 + 전쟁 배상금'을 역으로 요구하는 역제안을 제시하자, 트럼프 대통령이 소셜미디어에 '전혀 받아들일 수 없다(TOTALLY UNACCEPTABLE)'고 강경 반응하며 협상 결렬 우려가 커졌다. 이에 국제 유가가 즉각 반응해 브렌트유는 4% 올라 배럴당 \$104.01, WTI는 2.7% 오른 \$97.97을 기록했다. 반면 지난 5월 초 미-이란 협상 기대감 속에 급락했던 유가가 재차 \$100선을 넘어서며 인플레이션 재점화 경계감이 높아지고 있다. 글로벌 주식시장은 혼조세를 보였다. S&P 500은 7,300대를 유지했고, 한국 코스피는 반도체 랠리에 힘입어 4.32% 급등해 역대 최고치인 7,822.24를 경신했으며 SK하이닉스는 11% 이상 급등했다. 이번 주 최대 이벤트는 5월 12일(화) 미국 4월 CPI 발표(헤드라인 +3.7%YoY 예상)와, 5월 15일 파월 의장 임기 종료에 따른 케빈 워시 신임 Fed 의장 인준 표결이다. 유가 재급등이 CPI 서프라이즈를 유발할 경우 금리 인하 기대가 다시 후퇴할 수 있어 시장 변동성 확대가 예상된다.`,
+  history:`2026년 3~4월 미국의 대이란 군사 행동 이후 이란은 호르무즈 해협을 실질적으로 봉쇄하며 전 세계 원유·LNG 공급량의 약 20%가 묶였다. 유가는 한때 배럴당 \$130대까지 치솟았고 글로벌 인플레이션이 재점화됐다. 4월 초 임시 휴전 합의 이후 유가가 \$94~\$101선으로 급락했으나, 항구적 종전 협상은 줄곧 난항을 겪었다.`,
+  players:`트럼프 행정부는 최대 압박을 유지하면서 종전 협상을 주도하려 하며 군사 옵션 재개 가능성도 열어두고 있다. 이란은 핵 주권 보장·제재 해제·배상금 수령을 목표로 협상 조건을 높이고 있다. 파키스탄은 양측 메시지 전달 채널 역할을 하고 있으며, 중국은 이란 최대 원유 수입국으로서 해협 재개에 경제적 이해관계가 크다. 산유국들과 해운업계는 호르무즈 재개 시점을 예의주시하고 있다.`,
+  current:`이란의 역제안은 미국이 수용하기 어려운 조건(호르무즈 주권+배상금)을 포함해 협상이 사실상 원점으로 돌아갔다는 평가가 나온다. 트럼프가 강경 입장을 유지하면서 군사 옵션 재개 가능성이 다시 부각되고 있고, 이것이 유가 급등의 직접 원인이 됐다.`,
+  outlook:`5월 12일 CPI 발표에서 유가 급등의 영향으로 헤드라인 수치가 예상치를 웃돌 경우 금리 인하 기대가 크게 후퇴할 수 있다. 5월 15일 케빈 워시 Fed 의장 인준 여부도 통화정책 방향 가늠자가 된다. 이란 협상이 완전 결렬될 경우 유가 재차 \$115~\$120 시나리오까지 열려 있다.`,
+  sources:[{title:`Oil jumps 4% as Trump rejects Iran's response to ceasefire proposal — Euronews`,url:`https://www.euronews.com/business/2026/05/11/oil-jumps-4-after-trump-rejects-irans-response-to-ceasefire-proposal`},{title:`Markets dip as US-Iran ceasefire goes nowhere, leaving Trump with a military option to reopen Hormuz — Fortune`,url:`https://fortune.com/2026/05/10/markets-dow-futures-crude-oil-prices-us-iran-ceasefire-trump-military-option-strait-of-hormuz/`},{title:`Asia markets live updates: Nikkei, Kospi, Hang Seng — CNBC`,url:`https://www.cnbc.com/2026/05/11/asia-markets-today-live-updates-nikkei-kospi-hang-seng-sensex-csi-300-iran-hormuz.html`}]
+},{
+  category:`정치`,
+  colorFg:`#d93025`,
+  colorBg:`#fce8e6`,
+  headline:`러-우 3일 휴전 붕괴 — 양측 16,000건 이상 위반 상호 비난, 전선 교전 전면 재개`,
+  metrics:[`러시아 주장: 우크라이나가 24시간 내 16,071건 휴전 위반 저질렀다`,`우크라이나 주장: 러시아 60차례 공격 감행, 민간인 1명 사망·15명 부상`],
+  summary:`트럼프 대통령이 중재한 러시아-우크라이나 3일 휴전(5월 9~11일, 러시아 전승절 기념)이 사실상 붕괴됐다. 러시아 국방부는 우크라이나가 24시간 내 드론·포격으로 크림반도, 벨고로드주, 쿠르스크주 등에서 총 16,071건의 휴전 위반을 저질렀다고 주장했다. 우크라이나는 반박하며 러시아가 60차례 공격을 감행했고 민간인 1명이 사망하고 15명이 부상했다고 밝혔다. 젤렌스키 대통령은 러시아가 휴전을 준수하지도, '지키려는 노력조차 하지 않는다'고 강하게 비난했다. 양측은 대규모 도시 공습은 소강상태를 보였으나 전선 교전은 완전히 재개됐다. 앞서 부활절 등 여러 차례 합의된 임시 휴전이 모두 실질적 성과 없이 붕괴된 전례가 반복됐다. 한편 푸틴은 별도 회견에서 전쟁이 '끝나가고 있다'고 시사하며 제3국에서 젤렌스키와 만날 의향을 내비쳐 상반된 신호를 보냈다.`,
+  history:`러시아는 2022년 2월 우크라이나를 전면 침공했고, 4년 이상 이어진 전쟁은 교착 상태에 빠졌다. 트럼프 2기 행정부 출범 이후 미국은 적극적인 중재자로 나섰으나 부활절·러시아 연방 기념일 등 여러 차례 합의된 임시 휴전은 모두 실패했다. 양측 간 근본적 불신이 해소되지 않은 채 미봉적 휴전만 반복되고 있다.`,
+  players:`트럼프 대통령은 빠른 종전을 공약으로 내세운 만큼 중재 실패가 정치적 부담이 되고 있다. 푸틴은 '협상 용의'를 시사하면서도 실제 교전을 멈추지 않는 이중 전략을 구사하고 있다. 젤렌스키는 실질적 안전 보장 없이는 어떤 휴전도 용납할 수 없다는 입장이다. 유럽 동맹국들은 미국의 지원 지속 여부에 촉각을 세우고 있다.`,
+  current:`휴전 붕괴는 종전 협상이 여전히 요원함을 재확인시켰다. 러-우 양측의 상호 비난이 외교적 모멘텀을 완전히 소진시키는 분위기이며, 트럼프의 다음 중재 시도가 어떤 형태가 될지 불확실하다.`,
+  outlook:`5월 14~15일 트럼프-시진핑 베이징 정상회담에서 러시아-우크라이나 전쟁 중재 문제도 의제로 다뤄질 가능성이 있다. 푸틴의 '만남 의향' 발언이 단순한 외교적 제스처인지 실질적 신호인지가 단기 최대 관전 포인트다. 휴전 추가 합의 실패 시 유럽 에너지·곡물 가격 불안과 방산 지출 확대 압력이 지속될 전망이다.`,
+  sources:[{title:`Russia and Ukraine accuse the other of ceasefire violations — Al Jazeera`,url:`https://www.aljazeera.com/video/newsfeed/2026/5/11/russia-and-ukraine-accuse-the-other-of-ceasefire-violations`},{title:`Russia and Ukraine accuse each other of violating U.S.-brokered ceasefire — CBS News`,url:`https://www.cbsnews.com/news/russia-ukraine-accuse-each-other-ceasefire-violations/`},{title:`Russia and Ukraine accuse each other of violating U.S.-brokered three-day ceasefire — PBS NewsHour`,url:`https://www.pbs.org/newshour/amp/world/russia-and-ukraine-accuse-each-other-of-violating-u-s-brokered-three-day-ceasefire`}]
+},{
+  category:`기타 이슈`,
+  colorFg:`#0d7a5f`,
+  colorBg:`#e6f4f1`,
+  headline:`트럼프-시진핑 베이징 정상회담 5월 14~15일 확정 — 대만 최우선 의제, 이란·AI·희토류·무역도 논의`,
+  metrics:[`정상회담 일정: 2026-05-14(목)~15(금), 베이징 — 트럼프 13일 저녁 도착 예정`,`세계 60개국 이상 지도자가 회담 결과를 촉각 주시 중 (CNBC 보도)`],
+  summary:`미국과 중국이 도널드 트럼프 대통령의 베이징 방문 일정을 5월 14~15일로 공식 확정했다. 트럼프는 13일 저녁 베이징에 도착해 14일 시진핑 주석과 첫 공식 정상회담을 갖는다. 중국 측은 대만 문제를 가장 중요한 의제로 명시했고, 미국도 이를 수용해 대만 해협 안정화 여부가 핵심 관전 포인트가 됐다. 시진핑은 트럼프에게 대만 독립 반대 공식 표명과 무기 판매 제한을 압박할 것으로 예상된다. 이 밖에도 중국의 이란·러시아 관계, AI·반도체 기술 통제, 희토류 공급 확대, 농산물·보잉 항공기 구매 계약 등 광범위한 의제가 다뤄진다. 싱가포르부터 브뤼셀까지 60개국 이상의 정상들이 이 회담의 결과를 예의주시하고 있으며, 무역·안보·에너지 질서 전반에 영향을 줄 것으로 관측된다. 전문가들은 회담이 劇的 합의보다는 '관계 안정화'에 초점을 맞출 가능성이 높다고 분석한다.`,
+  history:`미-중 관계는 반도체·AI 패권 경쟁, 대만 해협 긴장, 무역 갈등을 축으로 구조적 대립이 심화돼 왔다. 트럼프 2기 출범 이후 양측은 관세 협상과 갈등을 반복했고, 지난해 한국에서 열린 미-중 정상회담에서는 대만 문제가 의도적으로 배제됐다. 이번 베이징 회담은 트럼프 집권 2년차 첫 중국 방문으로, 관계 재설정의 전환점으로 주목된다.`,
+  players:`트럼프는 무역 패키지 딜(중국의 농산물·보잉 구매)과 이란·러시아 관계 차단을 협상 카드로 활용하려 한다. 시진핑은 대만 문제에서 미국의 양보를 이끌어내고 희토류 수출 협력을 활용해 전략적 레버리지를 높이려 한다. 대만은 자국의 운명이 결정될 수 있는 회담을 긴장 속에 주시하고 있다. 한국·일본·유럽 등 동맹국들은 반도체 공급망과 대중 무역 정책 변화를 우려하며 촉각을 곤두세우고 있다.`,
+  current:`이란 전쟁 중 중국이 이란과의 관계를 어떻게 유지하고 있는지가 트럼프의 핵심 문제 제기 사안이다. 회담 직전 희토류 공급 협력 패키지가 부상하면서 미-중 간 거래 성사 가능성도 제기되고 있다.`,
+  outlook:`회담 결과는 대만 해협 긴장 수위, 반도체·AI 수출통제 완화 여부, 이란 전쟁 해법에 직접적 영향을 미친다. 양측 이해관계 충돌이 크고 국내 정치 압박도 있는 만큼 劇的 합의보다는 부분 합의 + 후속 협의 로드맵 제시 수준에 그칠 것이라는 전망이 우세하다. 회담 결렬 시 대만 해협 및 반도체 공급망 충격이 금융시장에 즉각 반영될 수 있다.`,
+  sources:[{title:`From Singapore to Brussels, world leaders eye Trump-Xi summit from afar — CNBC`,url:`https://www.cnbc.com/2026/05/11/trump-xi-summit-beijing-global-leaders-iran-war-taiwan-strait-of-hormuz-.html`},{title:`US-China relations: What to expect from the Trump-Xi summit — World Economic Forum`,url:`https://www.weforum.org/stories/2026/05/what-to-expect-trump-xi-summit-china-us/`},{title:`Taiwan tops Beijing's agenda for Trump-Xi summit — The Standard HK`,url:`https://www.thestandard.com.hk/china/article/330674/Taiwan-tops-Beijings-agenda-for-Trump-Xi-summit`}]
+}]
+}];
+
+let current = null;
+let currentCat = null;
+const CAT_ORDER = ['경제', '정치', '기타 이슈'];
+
+function renderSidebar() {
+  const list = document.getElementById('date-list');
+  list.innerHTML = '';
+  BRIEFS.forEach((b, i) => {
+    const el = document.createElement('div');
+    el.className = 'date-item' + (i === 0 ? ' active' : '');
+    el.dataset.tag = b.tag;
+    const parts = b.tag.split('-');
+    const short = parts[1] + '/' + parts[2];
+    el.innerHTML = b.tag;
+    el.addEventListener('click', () => showBrief(b.tag));
+    list.appendChild(el);
+  });
+}
+
+function showBrief(tag) {
+  current = tag;
+  document.querySelectorAll('.date-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.tag === tag);
+  });
+  const brief = BRIEFS.find(b => b.tag === tag);
+  if (!brief) return;
+
+  // 카테고리별 그룹핑
+  const grouped = {};
+  brief.stories.forEach(s => {
+    if (!grouped[s.category]) grouped[s.category] = [];
+    grouped[s.category].push(s);
+  });
+  const availableCats = CAT_ORDER.filter(c => grouped[c] && grouped[c].length);
+  if (!availableCats.length) return;
+
+  // 기본 카테고리 결정
+  if (!availableCats.includes(currentCat)) currentCat = availableCats[0];
+
+  renderContent(brief, grouped, availableCats);
+}
+
+function renderContent(brief, grouped, availableCats) {
+  const content = document.getElementById('content');
+  let html = `<div class="brief-header">
+    <div class="bh-eyebrow">Morning Brief</div>
+    <h2>${brief.label}</h2>
+  </div>`;
+
+  // 탭
+  html += '<div class="cat-tabs">';
+  availableCats.forEach(c => {
+    const cls = c === currentCat ? 'cat-tab active' : 'cat-tab';
+    html += `<button class="${cls}" data-cat="${c}">${c}</button>`;
+  });
+  html += '</div>';
+
+  // 선택된 카테고리 기사들
+  const stories = grouped[currentCat] || [];
+  stories.forEach((s, idx) => {
+    if (idx > 0) html += '<hr class="story-divider">';
+    html += `<div class="story">
+      <div class="story-top">
+        <div class="story-headline">${s.headline}</div>
+      </div>`;
+    if (s.metrics.length) {
+      html += '<div class="metrics">';
+      s.metrics.forEach(m => { html += `<div class="metric-chip">${m}</div>`; });
+      html += '</div>';
+    }
+    html += `<div class="summary">${s.summary}</div>`;
+
+    const bgSections = [
+      ['역사적 맥락', s.history],
+      ['핵심 플레이어', s.players],
+      ['현재 구도', s.current],
+      ['향후 전망', s.outlook],
+    ].filter(([, v]) => v);
+
+    if (bgSections.length) {
+      html += '<div class="bg-box"><div class="bg-box-title">배경 스토리</div>';
+      bgSections.forEach(([label, text]) => {
+        html += `<div class="bg-section">
+          <div class="bg-section-label">${label}</div>
+          <div class="bg-section-text">${text}</div>
+        </div>`;
+      });
+      html += '</div>';
+    }
+
+    if (s.sources.length) {
+      html += `<button class="sources-toggle" data-toggle="srcs-${idx}">출처 ${s.sources.length}개 보기 <span class="arrow">▾</span></button>`;
+      html += `<div class="sources-body" id="srcs-${idx}">`;
+      s.sources.forEach((src, si) => {
+        html += `<div class="source-item">
+          <span class="src-num">${si+1}</span>
+          <a href="${src.url}" target="_blank">${src.title}</a>
+        </div>`;
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+
+  content.innerHTML = html;
+
+  // 탭 클릭 핸들러
+  content.querySelectorAll('.cat-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentCat = btn.dataset.cat;
+      renderContent(brief, grouped, availableCats);
+    });
+  });
+
+  // 출처 토글
+  content.querySelectorAll('.sources-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const body = document.getElementById(btn.dataset.toggle);
+      const isOpen = body.classList.toggle('open');
+      btn.classList.toggle('open', isOpen);
+    });
+  });
+
+  document.getElementById('main').scrollTop = 0;
+}
+
+if (BRIEFS.length > 0) {
+  renderSidebar();
+  showBrief(BRIEFS[0].tag);
+} else {
+  document.getElementById('content').innerHTML = '<div class="empty">브리핑 데이터가 없습니다.</div>';
+}
+</script>
+</body>
+</html>
