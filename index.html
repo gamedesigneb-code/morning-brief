@@ -76,11 +76,19 @@
     color: var(--text); line-height: 1.25;
   }
 
+  /* ── Sticky Top (header + tabs) ── */
+  .sticky-top {
+    position: sticky; top: 0;
+    background: var(--paper); z-index: 20;
+    padding-top: 56px; margin-top: -56px;
+  }
+  .sticky-top .brief-header { margin-bottom: 24px; }
+
   /* ── Category Tabs ── */
   .cat-tabs {
     display: flex; gap: 0; margin-bottom: 36px;
     border-bottom: 1px solid var(--line);
-    position: sticky; top: 0; background: var(--paper); z-index: 10;
+    background: var(--paper);
   }
   .cat-tab {
     padding: 12px 20px 14px; cursor: pointer; font-size: 14px; font-weight: 500;
@@ -575,10 +583,11 @@ function showBrief(tag) {
 
 function renderContent(brief, grouped, availableCats) {
   const content = document.getElementById('content');
-  let html = `<div class="brief-header">
-    <div class="bh-eyebrow">Morning Brief</div>
-    <h2>${brief.label}</h2>
-  </div>`;
+  let html = `<div class="sticky-top">
+    <div class="brief-header">
+      <div class="bh-eyebrow">Morning Brief</div>
+      <h2>${brief.label}</h2>
+    </div>`;
 
   // 탭
   html += '<div class="cat-tabs">';
@@ -586,7 +595,7 @@ function renderContent(brief, grouped, availableCats) {
     const cls = c === currentCat ? 'cat-tab active' : 'cat-tab';
     html += `<button class="${cls}" data-cat="${c}">${c}</button>`;
   });
-  html += '</div>';
+  html += '</div></div>';
 
   // 선택된 카테고리 기사들
   const stories = grouped[currentCat] || [];
