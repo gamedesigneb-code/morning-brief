@@ -669,7 +669,7 @@ function renderQuiz() {
           feedback.className = 'quiz-feedback right';
           closeBtn.classList.remove('hidden');
         } else {
-          feedback.textContent = `정답! (${correctCount}/${PASS_TARGET}) 다음 문제로 갈게.`;
+          feedback.textContent = `역시 맞출 줄 알았어. (${correctCount}/${PASS_TARGET}) 다음 문제 고.`;
           feedback.className = 'quiz-feedback right';
           btn.blur();
           setTimeout(() => {
